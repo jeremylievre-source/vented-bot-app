@@ -2,104 +2,595 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Vinted Deals</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>DRIP.DEALS</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: -apple-system, sans-serif; background: #f5f5f5; }
-.header { background: #00b0b9; color: white; padding: 16px; text-align: center; }
-.header h1 { font-size: 20px; }
-.header p { font-size: 12px; opacity: 0.8; margin-top: 4px; }
-.filters { display: flex; gap: 8px; padding: 12px; overflow-x: auto; }
-.filter-btn { background: white; border: 2px solid #00b0b9; color: #00b0b9; padding: 6px 14px; border-radius: 20px; font-size: 13px; cursor: pointer; white-space: nowrap; }
-.filter-btn.active { background: #00b0b9; color: white; }
-.deals { padding: 12px; display: grid; gap: 12px; }
-.card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); display: flex; }
-.card img { width: 100px; height: 100px; object-fit: cover; }
-.card-info { padding: 10px; flex: 1; }
-.card-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; line-height: 1.3; }
-.card-brand { font-size: 11px; color: #888; margin-bottom: 6px; }
-.card-bottom { display: flex; justify-content: space-between; align-items: center; }
-.price { font-size: 16px; font-weight: 700; color: #00b0b9; }
-.resell { font-size: 11px; color: #4caf50; font-weight: 600; }
-.country { font-size: 11px; color: #888; }
-.btn-voir { background: #00b0b9; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; }
-.empty { text-align: center; padding: 40px; color: #888; }
-.loading { text-align: center; padding: 40px; color: #00b0b9; }
-.badge { background: #ff4444; color: white; font-size: 10px; padding: 2px 6px; border-radius: 10px; margin-left: 6px; }
+  :root {
+    --bg: #070710;
+    --surface: #0e0e1f;
+    --card: #12122a;
+    --border: rgba(120,80,255,0.15);
+    --accent: #7c3aff;
+    --accent2: #00e5ff;
+    --accent3: #ff3a8c;
+    --text: #f0eeff;
+    --muted: #6b6890;
+    --glow: 0 0 40px rgba(124,58,255,0.3);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(124,58,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,58,255,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    top: -200px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    height: 400px;
+    background: radial-gradient(ellipse, rgba(124,58,255,0.12) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrapper { position: relative; z-index: 1; }
+
+  /* HEADER */
+  .header {
+    padding: 20px 16px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .logo {
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    background: linear-gradient(135deg, #7c3aff, #00e5ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .logo span {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    font-weight: 400;
+    display: block;
+    -webkit-text-fill-color: var(--muted);
+    letter-spacing: 3px;
+    margin-top: -2px;
+  }
+
+  .status-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(0,229,255,0.08);
+    border: 1px solid rgba(0,229,255,0.2);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--accent2);
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent2);
+    box-shadow: 0 0 8px var(--accent2);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* STATS BAR */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    padding: 20px 16px 0;
+  }
+
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  }
+
+  .stat-val {
+    font-family: 'Space Mono', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent2);
+  }
+
+  .stat-label {
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  /* FILTERS */
+  .section-title {
+    padding: 20px 16px 10px;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+  }
+
+  .filters {
+    display: flex;
+    gap: 8px;
+    padding: 0 16px 16px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .filters::-webkit-scrollbar { display: none; }
+
+  .filter-btn {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+
+  .filter-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+    box-shadow: 0 0 20px rgba(124,58,255,0.4);
+  }
+
+  .filter-btn:hover:not(.active) {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+
+  /* DEALS */
+  .deals {
+    padding: 0 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-bottom: 32px;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    display: flex;
+    align-items: stretch;
+    transition: all 0.2s;
+    animation: slideIn 0.3s ease both;
+    position: relative;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(124,58,255,0.05), transparent);
+    pointer-events: none;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .card:active { transform: scale(0.98); }
+
+  .card-img {
+    width: 90px;
+    min-height: 90px;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  .card-img-placeholder {
+    width: 90px;
+    min-height: 90px;
+    background: linear-gradient(135deg, rgba(124,58,255,0.2), rgba(0,229,255,0.1));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    flex-shrink: 0;
+  }
+
+  .card-body {
+    padding: 12px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-width: 0;
+  }
+
+  .card-top { }
+
+  .card-brand {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 3px;
+  }
+
+  .card-title {
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .card-meta {
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .card-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 8px;
+  }
+
+  .price-block { }
+
+  .price {
+    font-family: 'Space Mono', monospace;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .price-euro { font-size: 12px; color: var(--muted); }
+
+  .resell-badge {
+    font-size: 10px;
+    color: #00ff88;
+    font-family: 'Space Mono', monospace;
+    margin-top: 2px;
+  }
+
+  .btn-voir {
+    background: linear-gradient(135deg, var(--accent), #5a1fff);
+    border: none;
+    color: white;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    box-shadow: 0 0 16px rgba(124,58,255,0.4);
+    transition: all 0.2s;
+  }
+
+  .btn-voir:active { transform: scale(0.95); }
+
+  /* ROI indicator */
+  .roi-bar {
+    height: 3px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 2px;
+    margin-top: 6px;
+    overflow: hidden;
+  }
+
+  .roi-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+  }
+
+  .roi-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+
+  /* EMPTY STATE */
+  .empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+  }
+
+  .empty-icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-text { font-size: 14px; font-weight: 600; }
+  .empty-sub { font-size: 12px; margin-top: 6px; opacity: 0.7; }
+
+  /* SCAN BTN */
+  .scan-btn {
+    margin: 16px;
+    width: calc(100% - 32px);
+    background: linear-gradient(135deg, var(--accent), #00e5ff);
+    border: none;
+    color: white;
+    padding: 14px;
+    border-radius: 12px;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    letter-spacing: 1px;
+    box-shadow: var(--glow);
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+
+  .scan-btn:active { transform: scale(0.98); opacity: 0.9; }
+
+  /* LOADING */
+  .loading {
+    text-align: center;
+    padding: 40px;
+  }
+
+  .loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 12px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading-text {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 2px;
+  }
+
+  /* PROFIT HIGHLIGHT */
+  .hot-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: var(--accent3);
+    color: white;
+    font-size: 9px;
+    font-family: 'Space Mono', monospace;
+    padding: 3px 7px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+    font-weight: 700;
+  }
 </style>
 </head>
 <body>
+<div class="wrapper">
 
-<div class="header">
-  <h1>🛍 Vinted Deals</h1>
-  <p id="subtitle">Chargement des affaires...</p>
-</div>
+  <div class="header">
+    <div class="logo">
+      DRIP.DEALS
+      <span>POWERED BY VINTED</span>
+    </div>
+    <div class="status-pill">
+      <div class="status-dot"></div>
+      LIVE
+    </div>
+  </div>
 
-<div class="filters">
-  <button class="filter-btn active" onclick="filter('all')">Tout</button>
-  <button class="filter-btn" onclick="filter('Carhartt')">Carhartt</button>
-  <button class="filter-btn" onclick="filter('Nike Vintage')">Nike</button>
-  <button class="filter-btn" onclick="filter('Adidas 90s')">Adidas</button>
-</div>
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-val" id="stat-total">—</div>
+      <div class="stat-label">Deals</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" id="stat-avg">—</div>
+      <div class="stat-label">Prix moy.</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" id="stat-roi">—</div>
+      <div class="stat-label">ROI moy.</div>
+    </div>
+  </div>
 
-<div class="deals" id="deals">
-  <div class="loading">⏳ Chargement...</div>
+  <button class="scan-btn" onclick="scanNow()">⚡ Scanner maintenant</button>
+
+  <div class="section-title">— Filtrer par marque</div>
+
+  <div class="filters" id="filters">
+    <button class="filter-btn active" onclick="filter('all', this)">Tout</button>
+    <button class="filter-btn" onclick="filter('Carhartt', this)">Carhartt</button>
+    <button class="filter-btn" onclick="filter('Nike Vintage', this)">Nike 90s</button>
+    <button class="filter-btn" onclick="filter('Adidas 90s', this)">Adidas</button>
+  </div>
+
+  <div class="section-title">— Meilleures affaires</div>
+
+  <div class="deals" id="deals">
+    <div class="loading">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">CHARGEMENT...</div>
+    </div>
+  </div>
+
 </div>
 
 <script>
-const tg = window.Telegram.WebApp;
-tg.expand();
+const tg = window.Telegram?.WebApp;
+if (tg) tg.expand();
 
 let allDeals = [];
 let currentFilter = 'all';
 
-// Données de démonstration (remplace par ton API plus tard)
 const demoDeals = [
-  { title: "Carhartt WIP Michigan Jacket", brand: "Carhartt", price: 12, resell: 45, country: "🇵🇱 Pologne", image: "https://via.placeholder.com/100x100/00b0b9/white?text=C", url: "https://vinted.fr" },
-  { title: "Nike ACG Windbreaker 90s", brand: "Nike Vintage", price: 8, resell: 35, country: "🇷🇴 Roumanie", image: "https://via.placeholder.com/100x100/ff6600/white?text=N", url: "https://vinted.fr" },
-  { title: "Adidas Trefoil Vintage Hoodie", brand: "Adidas 90s", price: 10, resell: 30, country: "🇩🇪 Allemagne", image: "https://via.placeholder.com/100x100/000/white?text=A", url: "https://vinted.fr" },
-  { title: "Carhartt Detroit Jacket Brown", brand: "Carhartt", price: 15, resell: 55, country: "🇧🇪 Belgique", image: "https://via.placeholder.com/100x100/8B4513/white?text=C", url: "https://vinted.fr" },
-  { title: "Nike Vintage Fleece 1/4 Zip", brand: "Nike Vintage", price: 7, resell: 28, country: "🇵🇱 Pologne", image: "https://via.placeholder.com/100x100/ff6600/white?text=N", url: "https://vinted.fr" },
+  { title: "Carhartt WIP Michigan Jacket Noir", brand: "Carhartt", price: 12, resell: 55, country: "🇵🇱 Pologne", image: null, emoji: "🧥", url: "https://vinted.fr" },
+  { title: "Nike ACG Storm-Fit Windbreaker 90s", brand: "Nike Vintage", price: 8, resell: 40, country: "🇷🇴 Roumanie", image: null, emoji: "🌬️", url: "https://vinted.fr" },
+  { title: "Adidas Trefoil Hoodie Vintage Navy", brand: "Adidas 90s", price: 10, resell: 35, country: "🇩🇪 Allemagne", image: null, emoji: "👕", url: "https://vinted.fr" },
+  { title: "Carhartt Detroit Jacket Brown Duck", brand: "Carhartt", price: 14, resell: 65, country: "🇧🇪 Belgique", image: null, emoji: "🧥", url: "https://vinted.fr" },
+  { title: "Nike Vintage 1/4 Zip Fleece Grey", brand: "Nike Vintage", price: 7, resell: 30, country: "🇵🇱 Pologne", image: null, emoji: "🏃", url: "https://vinted.fr" },
+  { title: "Adidas Firebird Track Jacket Blue", brand: "Adidas 90s", price: 9, resell: 38, country: "🇪🇸 Espagne", image: null, emoji: "🔥", url: "https://vinted.fr" },
+  { title: "Carhartt WIP Vest Quilted Black", brand: "Carhartt", price: 11, resell: 45, country: "🇫🇷 France", image: null, emoji: "🦺", url: "https://vinted.fr" },
 ];
+
+function getRoi(price, resell) {
+  return Math.round(((resell - price) / price) * 100);
+}
+
+function getRoiWidth(roi) {
+  return Math.min(100, Math.max(10, roi / 5));
+}
+
+function isHot(roi) { return roi > 200; }
 
 function renderDeals(deals) {
   const container = document.getElementById('deals');
-  if (deals.length === 0) {
-    container.innerHTML = '<div class="empty">😴 Aucune affaire pour l\'instant</div>';
+  if (!deals.length) {
+    container.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">🌙</div>
+        <div class="empty-text">Aucune affaire trouvée</div>
+        <div class="empty-sub">Lance un scan pour découvrir les deals</div>
+      </div>`;
     return;
   }
-  container.innerHTML = deals.map(deal => `
-    <div class="card">
-      <img src="${deal.image}" onerror="this.src='https://via.placeholder.com/100x100/eee/999?text=?'">
-      <div class="card-info">
-        <div class="card-title">${deal.title}</div>
-        <div class="card-brand">${deal.brand} · ${deal.country}</div>
+
+  const sorted = [...deals].sort((a, b) => getRoi(a.price, a.resell) - getRoi(b.price, b.resell)).reverse();
+
+  container.innerHTML = sorted.map((deal, i) => {
+    const roi = getRoi(deal.price, deal.resell);
+    const profit = deal.resell - deal.price;
+    return `
+    <div class="card" style="animation-delay: ${i * 0.05}s">
+      ${isHot(roi) ? '<div class="hot-badge">🔥 HOT</div>' : ''}
+      <div class="card-img-placeholder">${deal.emoji}</div>
+      <div class="card-body">
+        <div class="card-top">
+          <div class="card-brand">${deal.brand}</div>
+          <div class="card-title">${deal.title}</div>
+          <div class="card-meta">${deal.country}</div>
+        </div>
+        <div>
+          <div class="roi-bar"><div class="roi-fill" style="width:${getRoiWidth(roi)}%"></div></div>
+          <div class="roi-label">ROI +${roi}% · Profit estimé +${profit}€</div>
+        </div>
         <div class="card-bottom">
-          <div>
-            <div class="price">${deal.price}€</div>
-            <div class="resell">↗ Revente ~${deal.resell}€</div>
+          <div class="price-block">
+            <div class="price">${deal.price}<span class="price-euro">€</span></div>
+            <div class="resell-badge">↗ ~${deal.resell}€</div>
           </div>
-          <button class="btn-voir" onclick="window.open('${deal.url}')">Voir</button>
+          <button class="btn-voir" onclick="window.open('${deal.url}', '_blank')">VOIR →</button>
         </div>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
+
+  // Update stats
+  const avg = Math.round(deals.reduce((s, d) => s + d.price, 0) / deals.length);
+  const avgRoi = Math.round(deals.reduce((s, d) => s + getRoi(d.price, d.resell), 0) / deals.length);
+  document.getElementById('stat-total').textContent = deals.length;
+  document.getElementById('stat-avg').textContent = avg + '€';
+  document.getElementById('stat-roi').textContent = '+' + avgRoi + '%';
 }
 
-function filter(brand) {
+function filter(brand, btn) {
   currentFilter = brand;
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  event.target.classList.add('active');
+  btn.classList.add('active');
   const filtered = brand === 'all' ? allDeals : allDeals.filter(d => d.brand === brand);
   renderDeals(filtered);
 }
 
-// Chargement
-allDeals = demoDeals;
-document.getElementById('subtitle').textContent = `${allDeals.length} affaires · Budget ≤15€`;
-renderDeals(allDeals);
+function scanNow() {
+  const btn = document.querySelector('.scan-btn');
+  btn.textContent = '⏳ Scan en cours...';
+  btn.disabled = true;
+  document.getElementById('deals').innerHTML = `
+    <div class="loading">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">SCANNING 20 PAYS...</div>
+    </div>`;
+  setTimeout(() => {
+    btn.textContent = '⚡ Scanner maintenant';
+    btn.disabled = false;
+    allDeals = demoDeals;
+    const filtered = currentFilter === 'all' ? allDeals : allDeals.filter(d => d.brand === currentFilter);
+    renderDeals(filtered);
+    if (tg) tg.HapticFeedback?.notificationOccurred('success');
+  }, 2000);
+}
+
+// Init
+setTimeout(() => {
+  allDeals = demoDeals;
+  renderDeals(allDeals);
+}, 800);
 </script>
 </body>
 </html>
+HTMLEOF
