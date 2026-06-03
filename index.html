@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vinted Deals</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, sans-serif; background: #f5f5f5; }
+.header { background: #00b0b9; color: white; padding: 16px; text-align: center; }
+.header h1 { font-size: 20px; }
+.header p { font-size: 12px; opacity: 0.8; margin-top: 4px; }
+.filters { display: flex; gap: 8px; padding: 12px; overflow-x: auto; }
+.filter-btn { background: white; border: 2px solid #00b0b9; color: #00b0b9; padding: 6px 14px; border-radius: 20px; font-size: 13px; cursor: pointer; white-space: nowrap; }
+.filter-btn.active { background: #00b0b9; color: white; }
+.deals { padding: 12px; display: grid; gap: 12px; }
+.card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); display: flex; }
+.card img { width: 100px; height: 100px; object-fit: cover; }
+.card-info { padding: 10px; flex: 1; }
+.card-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; line-height: 1.3; }
+.card-brand { font-size: 11px; color: #888; margin-bottom: 6px; }
+.card-bottom { display: flex; justify-content: space-between; align-items: center; }
+.price { font-size: 16px; font-weight: 700; color: #00b0b9; }
+.resell { font-size: 11px; color: #4caf50; font-weight: 600; }
+.country { font-size: 11px; color: #888; }
+.btn-voir { background: #00b0b9; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; }
+.empty { text-align: center; padding: 40px; color: #888; }
+.loading { text-align: center; padding: 40px; color: #00b0b9; }
+.badge { background: #ff4444; color: white; font-size: 10px; padding: 2px 6px; border-radius: 10px; margin-left: 6px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🛍 Vinted Deals</h1>
+  <p id="subtitle">Chargement des affaires...</p>
+</div>
+
+<div class="filters">
+  <button class="filter-btn active" onclick="filter('all')">Tout</button>
+  <button class="filter-btn" onclick="filter('Carhartt')">Carhartt</button>
+  <button class="filter-btn" onclick="filter('Nike Vintage')">Nike</button>
+  <button class="filter-btn" onclick="filter('Adidas 90s')">Adidas</button>
+</div>
+
+<div class="deals" id="deals">
+  <div class="loading">⏳ Chargement...</div>
+</div>
+
+<script>
+const tg = window.Telegram.WebApp;
+tg.expand();
+
+let allDeals = [];
+let currentFilter = 'all';
+
+// Données de démonstration (remplace par ton API plus tard)
+const demoDeals = [
+  { title: "Carhartt WIP Michigan Jacket", brand: "Carhartt", price: 12, resell: 45, country: "🇵🇱 Pologne", image: "https://via.placeholder.com/100x100/00b0b9/white?text=C", url: "https://vinted.fr" },
+  { title: "Nike ACG Windbreaker 90s", brand: "Nike Vintage", price: 8, resell: 35, country: "🇷🇴 Roumanie", image: "https://via.placeholder.com/100x100/ff6600/white?text=N", url: "https://vinted.fr" },
+  { title: "Adidas Trefoil Vintage Hoodie", brand: "Adidas 90s", price: 10, resell: 30, country: "🇩🇪 Allemagne", image: "https://via.placeholder.com/100x100/000/white?text=A", url: "https://vinted.fr" },
+  { title: "Carhartt Detroit Jacket Brown", brand: "Carhartt", price: 15, resell: 55, country: "🇧🇪 Belgique", image: "https://via.placeholder.com/100x100/8B4513/white?text=C", url: "https://vinted.fr" },
+  { title: "Nike Vintage Fleece 1/4 Zip", brand: "Nike Vintage", price: 7, resell: 28, country: "🇵🇱 Pologne", image: "https://via.placeholder.com/100x100/ff6600/white?text=N", url: "https://vinted.fr" },
+];
+
+function renderDeals(deals) {
+  const container = document.getElementById('deals');
+  if (deals.length === 0) {
+    container.innerHTML = '<div class="empty">😴 Aucune affaire pour l\'instant</div>';
+    return;
+  }
+  container.innerHTML = deals.map(deal => `
+    <div class="card">
+      <img src="${deal.image}" onerror="this.src='https://via.placeholder.com/100x100/eee/999?text=?'">
+      <div class="card-info">
+        <div class="card-title">${deal.title}</div>
+        <div class="card-brand">${deal.brand} · ${deal.country}</div>
+        <div class="card-bottom">
+          <div>
+            <div class="price">${deal.price}€</div>
+            <div class="resell">↗ Revente ~${deal.resell}€</div>
+          </div>
+          <button class="btn-voir" onclick="window.open('${deal.url}')">Voir</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filter(brand) {
+  currentFilter = brand;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  const filtered = brand === 'all' ? allDeals : allDeals.filter(d => d.brand === brand);
+  renderDeals(filtered);
+}
+
+// Chargement
+allDeals = demoDeals;
+document.getElementById('subtitle').textContent = `${allDeals.length} affaires · Budget ≤15€`;
+renderDeals(allDeals);
+</script>
+</body>
+</html>
